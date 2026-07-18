@@ -65,7 +65,7 @@ Data:
         "X-Title": "Weather Pipeline Dashboard",
       },
       body: JSON.stringify({
-        model: "openrouter/auto",
+        model: "openrouter/free",
         messages: [{ role: "user", content: prompt }],
         max_tokens: 10000,
         temperature: 0.7,
