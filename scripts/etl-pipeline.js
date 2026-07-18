@@ -21,7 +21,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
-const LOCATION = process.env.WEATHER_LOCATION || 'New York';
+const LOCATION = 'Manila';
 const LOCATION_ENCODED = encodeURIComponent(LOCATION);
 const DAYS_BACK = 7;
 const VC_BASE_URL = 'https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline';
