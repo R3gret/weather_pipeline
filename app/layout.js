@@ -13,7 +13,7 @@ export const metadata = {
     template: "%s | WeatherPipeline",
   },
   description:
-    "Automated ETL dashboard visualizing historical weather data for New York City. Powered by Visual Crossing API, Supabase, and GitHub Actions.",
+    "Automated ETL dashboard visualizing historical weather data for Manila. Powered by Visual Crossing API, Supabase, and GitHub Actions.",
   keywords: ["weather", "ETL", "dashboard", "Next.js", "Supabase", "data pipeline"],
   openGraph: {
     title: "Weather Pipeline Dashboard",

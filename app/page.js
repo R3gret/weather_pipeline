@@ -9,7 +9,7 @@ export const revalidate = 3600;
 export const metadata = {
   title: "Weather Pipeline Dashboard",
   description:
-    "Automated historical weather data visualization for New York City, powered by Visual Crossing and Supabase.",
+    "Automated historical weather data visualization for Manila, powered by Visual Crossing and Supabase.",
 };
 
 // ─── Data Fetching ─────────────────────────────────────────────────────────────
@@ -20,6 +20,7 @@ async function getWeatherData() {
     const { data, error } = await supabase
       .from("weather_logs")
       .select("id, location_name, recorded_at, temperature_c, humidity, wind_speed_kph, condition, fetched_at")
+      .eq("location_name", "Manila")
       .order("recorded_at", { ascending: true })
       .limit(30); // Last 30 records
 
@@ -147,14 +148,6 @@ export default async function DashboardPage() {
               unit=" kph"
               sub="Daily average"
               accent="purple"
-            />
-            <StatCard
-              icon="📡"
-              label="Data Points"
-              value={stats.recordCount}
-              unit=""
-              sub="Rows in Supabase"
-              accent="green"
             />
           </section>
         ) : (

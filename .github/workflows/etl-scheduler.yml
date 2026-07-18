@@ -8,6 +8,7 @@
 #   NEXT_PUBLIC_SUPABASE_URL      — Your Supabase project URL
 #   SUPABASE_SERVICE_ROLE_KEY     — Service-role key (bypasses RLS)
 #   VISUAL_CROSSING_API_KEY       — Your Visual Crossing API key
+#   WEATHER_LOCATION              — City name to fetch (e.g. "Manila")
 # ─────────────────────────────────────────────────────────────────────────────
 
 name: 🌦️ ETL — Weather Data Pipeline
