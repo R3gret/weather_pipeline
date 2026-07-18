@@ -1,0 +1,78 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# CI/CD — Build & Deploy Next.js Dashboard
+# ─────────────────────────────────────────────────────────────────────────────
+# Triggers on every push to the `main` branch.
+# Runs linting and a production build to validate code correctness.
+#
+# For Vercel deployment, uncomment the "Deploy to Vercel" step and add:
+#   VERCEL_TOKEN      — From vercel.com → Account Settings → Tokens
+#   VERCEL_ORG_ID     — From .vercel/project.json after `vercel link`
+#   VERCEL_PROJECT_ID — From .vercel/project.json after `vercel link`
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: 🚀 CI/CD — Build & Deploy Dashboard
+
+on:
+  push:
+    branches:
+      - main
+
+  # Allow manual triggers
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      # Provide stub values for the build so Next.js doesn't error on missing
+      # env vars during static analysis. Real values are only needed at runtime.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Lint code
+        run: npm run lint
+
+      - name: 🏗️ Build Next.js app
+        run: npm run build
+
+      - name: ✅ Build succeeded
+        run: echo "Build and lint passed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+
+  # ─── Optional: Deploy to Vercel ─────────────────────────────────────────────
+  # Uncomment this job after adding VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+  # to your repository secrets.
+  #
+  # deploy:
+  #   name: Deploy to Vercel
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   if: github.ref == 'refs/heads/main'
+  #
+  #   steps:
+  #     - name: 📥 Checkout repository
+  #       uses: actions/checkout@v4
+  #
+  #     - name: 🚀 Deploy to Vercel
+  #       uses: amondnet/vercel-action@v25
+  #       with:
+  #         vercel-token: ${{ secrets.VERCEL_TOKEN }}
+  #         vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+  #         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+  #         vercel-args: "--prod"

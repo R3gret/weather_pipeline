@@ -1,0 +1,63 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# ETL Scheduler — Weather Data Pipeline
+# ─────────────────────────────────────────────────────────────────────────────
+# Runs the Node.js ETL script every 12 hours to fetch historical weather data
+# from Visual Crossing and upsert it into Supabase.
+#
+# Required Repository Secrets (Settings → Secrets and Variables → Actions):
+#   NEXT_PUBLIC_SUPABASE_URL      — Your Supabase project URL
+#   SUPABASE_SERVICE_ROLE_KEY     — Service-role key (bypasses RLS)
+#   VISUAL_CROSSING_API_KEY       — Your Visual Crossing API key
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: 🌦️ ETL — Weather Data Pipeline
+
+on:
+  # Run every 12 hours at :00 (midnight and noon UTC)
+  schedule:
+    - cron: "0 */12 * * *"
+
+  # Allow manual runs from the GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Reason for manual trigger"
+        required: false
+        default: "Manual run"
+
+jobs:
+  etl:
+    name: Fetch & Upsert Weather Data
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🚀 Run ETL pipeline
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VISUAL_CROSSING_API_KEY: ${{ secrets.VISUAL_CROSSING_API_KEY }}
+        run: node scripts/etl-pipeline.js
+
+      - name: ✅ Pipeline success notification
+        if: success()
+        run: echo "ETL pipeline completed successfully at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+
+      - name: ❌ Pipeline failure notification
+        if: failure()
+        run: |
+          echo "ETL pipeline FAILED at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "Check logs above for details."
+          exit 1
