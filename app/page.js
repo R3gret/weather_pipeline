@@ -1,7 +1,9 @@
 import { createPublicSupabaseClient } from "@/lib/supabase";
 import WeatherChart from "@/components/WeatherChart";
 import StatCard from "@/components/StatCard";
+import AIInsights from "@/components/AIInsights";
 import { format, parseISO } from "date-fns";
+import { unstable_cache } from "next/cache";
 
 // Revalidate every hour so the page always shows fresh data
 export const revalidate = 3600;
@@ -36,6 +38,76 @@ async function getWeatherData() {
   }
 }
 
+// ─── AI Insight ────────────────────────────────────────────────────────────────
+
+// The actual OpenRouter fetch — extracted so unstable_cache can wrap it.
+// `lastFetched` is the latest fetched_at from the weather DB row, used as the
+// cache key so a new insight is only generated when new weather data arrives.
+async function fetchInsightFromOpenRouter(stats, lastFetched) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return { insight: null, model: null, error: "OpenRouter API key not configured." };
+
+  const prompt = `You are a weather analyst writing a brief insight for a public dashboard. Using the data below for ${stats.location}, write exactly ONE paragraph (5-7 sentences). Summarize the temperature range, what the humidity and wind mean for comfort, the current condition, and one practical tip for residents. Be conversational and specific — no bullet points, no headers, no lists.
+
+Data:
+- Period: ${stats.recordCount} days (latest: ${stats.latestDate})
+- Current: ${stats.latestCondition}, ${stats.latestTemp}°C
+- Temp range: ${stats.minTemp}°C low / ${stats.avgTemp}°C avg / ${stats.maxTemp}°C high
+- Humidity: ${stats.avgHumidity}% | Wind: ${stats.avgWind} kph`;
+
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://weather-pipeline.vercel.app",
+        "X-Title": "Weather Pipeline Dashboard",
+      },
+      body: JSON.stringify({
+        model: "openrouter/auto",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 10000,
+        temperature: 0.7,
+      }),
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error("[AIInsight] OpenRouter error:", res.status, errText);
+      return { insight: null, model: null, error: `OpenRouter returned ${res.status}.` };
+    }
+
+    const json = await res.json();
+    // Strip <think>...</think> reasoning blocks (some models include these)
+    const raw = json.choices?.[0]?.message?.content ?? "";
+    const insight = raw.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+    const usedModel = json.model ?? "Free (auto-routed)";
+
+    console.log(`[AIInsight] Generated for fetched_at=${lastFetched}, model=${usedModel}`);
+    return { insight: insight || null, model: usedModel, error: null };
+  } catch (err) {
+    console.error("[AIInsight] Fetch failed:", err.message);
+    return { insight: null, model: null, error: "Failed to reach OpenRouter." };
+  }
+}
+
+// Cached wrapper — keyed on lastFetched so the insight is only regenerated
+// when the ETL pipeline writes new weather data. All page visits in between
+// receive the cached result instantly with zero OpenRouter calls.
+async function getWeatherInsight(stats) {
+  if (!stats) return { insight: null, model: null, error: null };
+
+  const cachedFetch = unstable_cache(
+    () => fetchInsightFromOpenRouter(stats, stats.lastFetched),
+    ["weather-insight", stats.lastFetched], // cache key changes only on new fetch
+    { revalidate: false }                   // never expire — key rotation handles freshness
+  );
+
+  return cachedFetch();
+}
+
 // ─── Derived Stats ─────────────────────────────────────────────────────────────
 
 function computeStats(data) {
@@ -66,6 +138,7 @@ function computeStats(data) {
 export default async function DashboardPage() {
   const weatherData = await getWeatherData();
   const stats = computeStats(weatherData);
+  const { insight, model: insightModel, error: insightError } = await getWeatherInsight(stats);
 
   return (
     <main className="dashboard">
@@ -159,6 +232,13 @@ export default async function DashboardPage() {
             </p>
           </div>
         )}
+
+        {/* AI Insights */}
+        <AIInsights
+          insight={insight}
+          model={insightModel}
+          error={insightError}
+        />
 
         {/* Charts */}
         <section className="chart-card">

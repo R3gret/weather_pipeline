@@ -587,6 +587,191 @@ body {
   border: 1px solid var(--border-subtle);
 }
 
+/* ─── AI Insight Card ──────────────────────────────────────────────────────── */
+.insight-card {
+  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(168, 85, 247, 0.06) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Animated top glow bar */
+.insight-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple), var(--accent-cyan));
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+.insight-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.insight-card__title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.insight-card__icon {
+  font-size: 1.6rem;
+  animation: float 4s ease-in-out infinite;
+}
+
+.insight-card__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.insight-card__model {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+.insight-card__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.insight-card__badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: var(--accent-purple);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.insight-card__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition), background var(--transition);
+}
+
+.insight-card__toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--border-active);
+  background: var(--bg-card-hover);
+}
+
+.insight-card__toggle-icon {
+  display: inline-block;
+  transition: transform 250ms ease;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.insight-card__toggle--open .insight-card__toggle-icon {
+  transform: rotate(0deg);
+}
+
+.insight-card__toggle:not(.insight-card__toggle--open) .insight-card__toggle-icon {
+  transform: rotate(-90deg);
+}
+
+.insight-card__body {
+  display: grid;
+  transition: grid-template-rows 280ms ease;
+}
+
+.insight-card__body--open {
+  grid-template-rows: 1fr;
+}
+
+.insight-card__body--closed {
+  grid-template-rows: 0fr;
+}
+
+.insight-card__body-inner {
+  overflow: hidden;
+  padding: 0 2rem;
+}
+
+.insight-card__body--open .insight-card__body-inner {
+  padding: 1.75rem 2rem;
+  transition: padding 280ms ease;
+}
+
+.insight-card__body--closed .insight-card__body-inner {
+  padding: 0 2rem;
+  transition: padding 280ms ease;
+}
+
+.insight-card__prose {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  width: 100%;
+}
+
+.insight-card__text {
+  font-size: 0.975rem;
+  line-height: 1.9;
+  color: var(--text-secondary);
+  width: 100%;
+  letter-spacing: 0.01em;
+}
+
+.insight-card__error {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--accent-red);
+  font-size: 0.9rem;
+}
+
+.insight-card__error-icon { font-size: 1.1rem; }
+
+.insight-card__empty {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.insight-card__footer {
+  padding: 0.85rem 2rem;
+  border-top: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.insight-card__footer-note {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
 /* ─── Footer ────────────────────────────────────────────────────────────────── */
 .dashboard__footer {
   margin-top: auto;
